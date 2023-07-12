@@ -2,6 +2,7 @@
 using MassTransit;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using PingConsumer;
 
 public class Program
 {
@@ -16,13 +17,27 @@ public class Program
             {
                 services.AddMassTransit(x =>
                 {
-                    x.AddConsumer<PingConsumer.PingConsumer>();
+
 
                     x.UsingRabbitMq((context, cfg) =>
                     {
+                        cfg.Host("rabbitmq://localhost", h =>
+                        {
+                            h.Username("guest");
+                            h.Password("guest");
+                        });
+                        x.AddConsumer<PingConsumer.PingConsumer>();
                         cfg.ConfigureEndpoints(context);
+
+
+                        // cfg.ReceiveEndpoint("ping-queue", e =>
+                        // {
+                        ////    e.Bind("ping-exchange");
+                        ////    e.Bind<Ping>();
+                        // });
                     });
                 });
+                services.AddHostedService<PingPublisher>();
 
             });
 }
